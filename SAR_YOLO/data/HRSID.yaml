@@ -1,0 +1,10 @@
+
+
+train: data/HRSID/train.txt
+val: data/HRSID/test.txt
+test: data/HRSID/test.txt
+
+nc: 1
+
+names:
+  0: ship

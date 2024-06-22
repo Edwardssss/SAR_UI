@@ -1,0 +1,13 @@
+train: data/SRSDD/dataSet/train.txt
+val: data/SRSDD/dataSet/test.txt
+test: data/SRSDD/dataSet/test.txt
+
+nc: 6
+
+names:
+  0: Container
+  1: ore-oil
+  2: Dredger
+  3: LawEnforc
+  4: Cell-Container
+  5: Fishing
