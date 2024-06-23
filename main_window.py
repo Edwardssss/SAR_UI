@@ -1,12 +1,18 @@
 from tkinter import *
-from stable_var import WidthHeight
+from stable_var import WidthHeight,LogRecorder,FilePath
 import BtnCallBack
 from HyperLink.tkinter.tkHyperlinkManager import HyperlinkManager
 import webbrowser
 from functools import partial
+from log_gen import get_logger
 
 if __name__ == "__main__":
     main_window = Tk()  # 创建窗口对象的背景色
+
+    # 创建Logger对象
+    LogRecorder.GlobalLogger = get_logger("SAR_UI_log",FilePath.LogExportPath)
+    LogRecorder.GlobalLogger.debug("script launch successfully")
+
     main_window.title("SAR图像目标识别演示程序")
     main_window.iconbitmap(".\\res\\icon\\radar.ico")
     main_window.resizable(False, True)  # 固定窗口大小
@@ -66,6 +72,8 @@ if __name__ == "__main__":
     Text_box.insert(INSERT, "训练代码",
                     hyperlink.add(partial(webbrowser.open, "https://github.com/oy159/sar_detect.git")))
     Text_box.insert(INSERT, "\n")
+
+    LogRecorder.GlobalLogger.debug("OK let's begin detect objects in SAR images!")
 
     # main_window.wm_attributes('-topmost', 1)  # 窗口置顶
 

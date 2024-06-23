@@ -58,6 +58,7 @@ class LogRecorder:
     file_name = ''
     t = None
     shape = None
+    GlobalLogger = None
 
     def __init__(self):
         pass
