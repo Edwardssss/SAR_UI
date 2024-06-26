@@ -1,13 +1,15 @@
 import tkinter
 import tkinter.messagebox
 from stable_var import FilePath, ProcVar, TimeCost
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 from tkinter import filedialog
 import detect
 import os
 import webbrowser
 from log_gen import log_record
 from stable_var import LogRecorder
+from Classifier_part import SAR_classifier
+import torch
 
 
 def ProcCallBack(textbox, model_var):
@@ -42,6 +44,27 @@ def ProcCallBack(textbox, model_var):
             LogRecorder.GlobalLogger.debug("Model:YOLO v5-lite")
         # 记录Log
         log_record(proc_result=proc_result)
+        # 裁剪区域
+        obj_image_list = detect.image_cut()
+        textbox.insert(tkinter.INSERT, "所有目标检测完成，总计%d个目标\n" % LogRecorder.obj_num)
+        # 进行分类
+        classifier = SAR_classifier()
+        class_result_list = []
+        for i in range(0, LogRecorder.obj_num):
+            class_result_list.append(classifier.classify(obj_image_list[i]))
+        # 对结果进行标注
+        unlabel_img = Image.open(os.path.join(FilePath.ResultSavePath, LogRecorder.file_name))
+        draw_img = ImageDraw.Draw(unlabel_img)
+        text_font = ImageFont.truetype(".\\res\\font\\msyh.ttf", 20)
+
+        for j in range(0, LogRecorder.obj_num):
+            indices = torch.tensor([j])
+            draw_img.text(
+                tuple(torch.index_select(LogRecorder.xywh[0], 0, indices.cuda()).cpu().numpy().tolist()[0][0:2]),
+                f'{class_result_list[j]}', (255, 0, 0), font=text_font)
+
+        unlabel_img.save(os.path.join(FilePath.CutSavePath, f"{LogRecorder.file_name[0:-4]}_labeled.png"))
+        textbox.insert(tkinter.INSERT, "分类器检测完成，结果保存于%s\n" % os.path.join(FilePath.CutSavePath, f"{LogRecorder.file_name[0:-4]}_labeled.png"))
 
         textbox.insert(tkinter.INSERT, "图片已保存至%s\n" % FilePath.ResultSavePath)
         LogRecorder.GlobalLogger.debug("Result is saved in %s" % FilePath.ResultSavePath)
@@ -52,6 +75,15 @@ def ProcCallBack(textbox, model_var):
         proc_img_photo = ImageTk.PhotoImage(proc_img_raw)
         proc_img_img = tkinter.Label(ImgDisplayWindow, image=proc_img_photo)
         proc_img_img.grid(column=2, row=1, columnspan=1, rowspan=1)
+
+        label_img_raw = Image.open(os.path.join(FilePath.CutSavePath, f"{LogRecorder.file_name[0:-4]}_labeled.png"))
+        label_img_photo = ImageTk.PhotoImage(label_img_raw)
+        label_img_img = tkinter.Label(ImgDisplayWindow, image=label_img_photo)
+        label_img_img.grid(column=3, row=1, columnspan=1, rowspan=1)
+
+        # label_img = tkinter.Label(ImgDisplayWindow, image=ImageTk.PhotoImage(
+        #     Image.open(os.path.join(FilePath.CutSavePath, f"{LogRecorder.file_name[0:-4]}_labeled.png"))))
+        # label_img.grid(column=3, row=1, columnspan=1, rowspan=1)
 
         textbox.insert(tkinter.INSERT, "图片显示完成\n")
         LogRecorder.GlobalLogger.debug("Illustration done")

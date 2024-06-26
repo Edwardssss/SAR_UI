@@ -23,6 +23,7 @@ class FilePath:
     RawImgPath = None
     LogExportPath = ".\\Log"
     ResultSavePath = ".\\result"
+    CutSavePath = ".\\cut"
 
     def __init__(self):
         pass
