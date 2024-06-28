@@ -8,7 +8,7 @@ import os
 import webbrowser
 from log_gen import log_record
 from stable_var import LogRecorder
-from Classifier_part import SAR_classifier
+from Classifier import MyNet, classify
 import torch
 
 
@@ -48,10 +48,15 @@ def ProcCallBack(textbox, model_var):
         obj_image_list = detect.image_cut()
         textbox.insert(tkinter.INSERT, "所有目标检测完成，总计%d个目标\n" % LogRecorder.obj_num)
         # 进行分类
-        classifier = SAR_classifier()
+        classifier = MyNet()
         class_result_list = []
+        sar_classifier = MyNet()
+        PATH = '.\\new_class_model.pth'
+        # 如果电脑为CPU模式则使用下面一行
+        sar_classifier.load_state_dict(torch.load(PATH))
+
         for i in range(0, LogRecorder.obj_num):
-            class_result_list.append(classifier.classify(obj_image_list[i]))
+            class_result_list.append(classify(obj_image_list[i], sar_classifier))
         # 对结果进行标注
         unlabel_img = Image.open(os.path.join(FilePath.ResultSavePath, LogRecorder.file_name))
         draw_img = ImageDraw.Draw(unlabel_img)
@@ -64,7 +69,8 @@ def ProcCallBack(textbox, model_var):
                 f'{class_result_list[j]}', (255, 0, 0), font=text_font)
 
         unlabel_img.save(os.path.join(FilePath.CutSavePath, f"{LogRecorder.file_name[0:-4]}_labeled.png"))
-        textbox.insert(tkinter.INSERT, "分类器检测完成，结果保存于%s\n" % os.path.join(FilePath.CutSavePath, f"{LogRecorder.file_name[0:-4]}_labeled.png"))
+        textbox.insert(tkinter.INSERT, "分类器检测完成，结果保存于%s\n" % os.path.join(FilePath.CutSavePath,
+                                                                                      f"{LogRecorder.file_name[0:-4]}_labeled.png"))
 
         textbox.insert(tkinter.INSERT, "图片已保存至%s\n" % FilePath.ResultSavePath)
         LogRecorder.GlobalLogger.debug("Result is saved in %s" % FilePath.ResultSavePath)
